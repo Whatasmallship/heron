@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Heron | 寻鸟计划</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --metallic-gradient: linear-gradient(90deg, #262526 0%, #2535bc 50%, #6da0d7 100%);
+        --font-mono: 'JetBrains Mono', monospace;
+        --font-sans: 'Inter', 'Noto Sans SC', sans-serif;
+      }
+      body {
+        font-family: var(--font-sans);
+        background-color: #FDFDFD;
+        color: #111;
+        overflow-x: hidden;
+      }
+      .font-mono {
+        font-family: var(--font-mono);
+      }
+      .metallic-text {
+        background: var(--metallic-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .metallic-bg {
+        background: var(--metallic-gradient);
+      }
+      .metallic-border {
+        border-image: var(--metallic-gradient) 1;
+      }
+      /* Hide Scrollbar for events container but keep functionality */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
+    "d3": "https://esm.sh/d3@^7.9.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
