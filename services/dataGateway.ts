@@ -1,5 +1,5 @@
 import { STATIC_REGISTRY } from '../data/staticRegistry';
-import { Lang, AppData, DataCard, Blog, Event, Job, Sponsor, Resource } from '../types';
+import { Lang, AppData, DataCard, Blog, Event, Job, Sponsor, Resource, Career } from '../types';
 
 /**
  * Field Mapper: Converts generic AppData into a display-ready DataCard.
@@ -34,6 +34,13 @@ const mapToDataCard = (item: AppData, lang: Lang): DataCard => {
         subtitle: j.department[lang],
         meta: j.salaryRange,
         link: j.link
+      };
+    case 'career':
+      const c = item as Career;
+      return {
+        id: c.id,
+        title: c.title[lang],
+        meta: c.description[lang]
       };
     case 'sponsor':
       const s = item as Sponsor;

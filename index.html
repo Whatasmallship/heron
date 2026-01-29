@@ -1,49 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project Heron | 寻鸟计划</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --metallic-gradient: linear-gradient(90deg, #262526 0%, #2535bc 50%, #6da0d7 100%);
-        --font-mono: 'JetBrains Mono', monospace;
-        --font-sans: 'Inter', 'Noto Sans SC', sans-serif;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Heron</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400&family=Noto+Sans+SC:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', 'Noto Sans SC', sans-serif;
+
+      /* Liquid metal gradient */
+      --liquid-gradient: linear-gradient(135deg, #1E4A7A 0%, #3498DB 25%, #1E4A7A 50%, #5DADE2 75%, #1E4A7A 100%);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+      transition: background-color 0.5s ease, color 0.5s ease;
+    }
+
+    .font-mono {
+      font-family: var(--font-mono);
+    }
+
+    /* Metallic text effect - subtle with texture */
+    @keyframes metallicShimmer {
+      0% {
+        background-position: -200% 0;
       }
-      body {
-        font-family: var(--font-sans);
-        background-color: #FDFDFD;
-        color: #111;
-        overflow-x: hidden;
+
+      100% {
+        background-position: 200% 0;
       }
-      .font-mono {
-        font-family: var(--font-mono);
+    }
+
+    .liquid-metal-text {
+      background: var(--liquid-gradient);
+      background-size: 100% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Metallic element with texture and highlight */
+    .liquid-metal-element {
+      background: linear-gradient(135deg,
+          #1E4A7A 0%,
+          #3498DB 30%,
+          #5DADE2 50%,
+          #3498DB 70%,
+          #1E4A7A 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .liquid-metal-element::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 100% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 30% at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .liquid-metal-element::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+    }
+
+    /* Frosted glass effect */
+    .frosted-glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .frosted-glass-dark {
+      background: rgba(13, 27, 42, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(52, 152, 219, 0.2);
+    }
+
+    /* Slow metallic flow for feather */
+    @keyframes metallicFlowSlow {
+      0% {
+        background-position: 0% 50%;
       }
-      .metallic-text {
-        background: var(--metallic-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+
+      50% {
+        background-position: 100% 50%;
       }
-      .metallic-bg {
-        background: var(--metallic-gradient);
+
+      100% {
+        background-position: 0% 50%;
       }
-      .metallic-border {
-        border-image: var(--metallic-gradient) 1;
+    }
+
+    .metallic-flow-text-slow {
+      background: linear-gradient(90deg, #9090B8, #4848A8, #9090B8);
+      background-size: 400% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: metallicFlowSlow 80s ease infinite;
+    }
+
+    /* Liquid feather - subtle metallic */
+    .liquid-feather {
+      background: linear-gradient(180deg,
+          #1E4A7A 0%,
+          #3498DB 30%,
+          #5DADE2 50%,
+          #3498DB 70%,
+          #1E4A7A 100%);
+      background-size: 100% 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: metallicFlowSlow 12s ease-in-out infinite;
+      filter: drop-shadow(0 0 8px rgba(52, 152, 219, 0.3));
+    }
+
+    /* Hide Scrollbar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Smooth carousel animation */
+    @keyframes scrollUp {
+      from {
+        transform: translateY(0);
       }
-      /* Hide Scrollbar for events container but keep functionality */
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
+
+      to {
+        transform: translateY(-50%);
       }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+    }
+
+    @keyframes scrollDown {
+      from {
+        transform: translateY(-50%);
       }
-    </style>
+
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .scroll-up {
+      animation: scrollUp 20s linear infinite;
+    }
+
+    .scroll-down {
+      animation: scrollDown 20s linear infinite;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://unpkg.com/topojson@3"></script>
   <script type="importmap">
 {
   "imports": {
@@ -56,7 +192,10 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

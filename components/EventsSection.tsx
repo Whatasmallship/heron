@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
 import { getStaticData } from '../services/dataGateway';
 import { Lang, Event } from '../types';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface EventsSectionProps {
   lang: Lang;
@@ -10,85 +10,227 @@ interface EventsSectionProps {
 
 const EventsSection: React.FC<EventsSectionProps> = ({ lang, id }) => {
   const events = getStaticData<Event>('events');
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const { theme, isLiquid, isDotMap } = useTheme();
 
-  // Convert vertical scroll to horizontal scroll when hovering this section
+  const sortedEvents = [...events].sort((a, b) => {
+    const dateA = a.date.replace(/\D/g, '');
+    const dateB = b.date.replace(/\D/g, '');
+    return dateB.localeCompare(dateA);
+  });
+
+  const displayEvent = hoveredId
+    ? events.find(e => e.id === hoveredId)
+    : sortedEvents[0];
+
+  const updateScrollState = () => {
+    const el = timelineRef.current;
+    if (!el) return;
+    setIsAtTop(el.scrollTop <= 0);
+    setIsAtBottom(Math.abs(el.scrollTop + el.clientHeight - el.scrollHeight) < 2);
+  };
+
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = timelineRef.current;
     if (!el) return;
 
     const onWheel = (e: WheelEvent) => {
-      if (e.deltaY === 0) return;
-      // If we are at the start and scrolling up, or end and scrolling down, let default happen
-      const isStart = el.scrollLeft === 0;
-      const isEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth;
-
-      if ((isStart && e.deltaY < 0) || (isEnd && e.deltaY > 0)) {
-         return; 
-      }
-      
       e.preventDefault();
-      el.scrollTo({
-        left: el.scrollLeft + e.deltaY * 2,
-        behavior: 'smooth'
-      });
+      e.stopPropagation();
+
+      const currentTop = el.scrollTop;
+      const maxScroll = el.scrollHeight - el.clientHeight;
+      let newScrollTop = currentTop + e.deltaY;
+
+      if (newScrollTop < 0) {
+        el.style.transform = `translateY(${Math.min(15, -newScrollTop * 0.2)}px)`;
+        setTimeout(() => {
+          el.style.transition = 'transform 0.25s ease-out';
+          el.style.transform = 'translateY(0)';
+          setTimeout(() => { el.style.transition = ''; }, 250);
+        }, 50);
+        newScrollTop = 0;
+      } else if (newScrollTop > maxScroll) {
+        const overflow = newScrollTop - maxScroll;
+        el.style.transform = `translateY(${-Math.min(15, overflow * 0.2)}px)`;
+        setTimeout(() => {
+          el.style.transition = 'transform 0.25s ease-out';
+          el.style.transform = 'translateY(0)';
+          setTimeout(() => { el.style.transition = ''; }, 250);
+        }, 50);
+        newScrollTop = maxScroll;
+      }
+
+      el.scrollTop = newScrollTop;
+      updateScrollState();
     };
 
-    el.addEventListener('wheel', onWheel);
-    return () => el.removeEventListener('wheel', onWheel);
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('scroll', updateScrollState);
+    updateScrollState();
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('scroll', updateScrollState);
+    };
   }, []);
 
   return (
-    <section id={id} className="w-full py-20 border-b border-gray-100 overflow-hidden relative">
-      <div className="px-8 lg:px-12 mb-8 flex justify-between items-end">
-        <h2 className="text-2xl font-bold tracking-tight">
-          {lang === 'cn' ? '活动与竞技' : 'EVENTS & CHALLENGES'}
-        </h2>
-        <span className="font-mono text-xs text-gray-400 hidden lg:block">SCROLL TO EXPLORE -></span>
-      </div>
+    <section
+      id={id}
+      className="min-h-screen flex relative overflow-hidden pt-20 transition-colors duration-500"
+      style={{ backgroundColor: theme.colors.bgAlt }}
+    >
+      {/* Left: Timeline */}
+      <div className="w-full lg:w-[45%] flex justify-center py-8 relative">
+        <div
+          ref={timelineRef}
+          className="relative h-[75vh] overflow-y-auto no-scrollbar px-4"
+          style={{ width: '480px' }}
+        >
+          <div className="relative py-8">
+            {/* Timeline line */}
+            <div
+              className="absolute transition-colors duration-500"
+              style={{
+                left: '50%',
+                top: 0,
+                height: '100%',
+                width: '2px',
+                transform: 'translateX(-50%)',
+                backgroundColor: theme.colors.textPrimary
+              }}
+            />
 
-      {/* Background Texture (0.5px lines) */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-5" 
-           style={{ backgroundImage: 'linear-gradient(45deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-      </div>
+            {sortedEvents.map((event, index) => {
+              const isLeft = index % 2 === 0;
+              const isHovered = hoveredId === event.id;
 
-      <div 
-        ref={scrollRef}
-        className="flex overflow-x-auto no-scrollbar pb-12 px-8 lg:px-12 space-x-6 z-10 relative"
-      >
-        {events.map((event) => (
-          <div 
-            key={event.id}
-            className="flex-shrink-0 w-[300px] h-[400px] border border-gray-300 bg-white hover:border-[#2535bc] transition-colors duration-300 flex flex-col justify-between p-6 group"
-          >
-            <div>
-              <div className="flex justify-between items-start mb-4">
-                <span className={`inline-block w-2 h-2 ${event.priority === 'high' ? 'bg-red-500' : 'bg-yellow-400'}`}></span>
-                <span className="font-mono text-xs text-gray-400">{event.date}</span>
-              </div>
-              <h3 className="text-xl font-bold leading-tight group-hover:text-[#2535bc] transition-colors">
-                {event.name[lang]}
-              </h3>
-              <div className="mt-4 inline-block px-2 py-1 border border-gray-200 text-xs font-mono text-gray-500">
-                {event.tag[lang]}
-              </div>
-            </div>
+              return (
+                <div key={event.id} className="relative mb-14" style={{ height: '70px' }}>
+                  {/* Dot - gets liquid metal effect when hovered in liquid theme */}
+                  <div
+                    className={`absolute rounded-full transition-all duration-300 ${isLiquid && isHovered ? 'liquid-metal-element' : ''
+                      }`}
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      width: isHovered ? '14px' : '10px',
+                      height: isHovered ? '14px' : '10px',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 10,
+                      backgroundColor: (isLiquid && isHovered) ? undefined : (isHovered ? theme.colors.accent : theme.colors.textPrimary),
+                      boxShadow: isDotMap && isHovered ? `0 0 12px ${theme.colors.accent}` : 'none'
+                    }}
+                  />
 
-            <div>
-               <div className="mb-6 font-mono text-sm text-gray-600">
-                  STATUS: {event.status[lang]}
-               </div>
-               <Link 
-                 to="/demo"
-                 className="block w-full py-3 border border-black text-center text-sm font-bold hover:bg-[#2535bc] hover:border-[#2535bc] hover:text-white transition-all"
-               >
-                 {lang === 'cn' ? '查看详情' : 'VIEW DETAILS'}
-               </Link>
-            </div>
+                  {/* Card */}
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 ${isLeft ? 'right-[calc(50%+24px)] text-right' : 'left-[calc(50%+24px)] text-left'
+                      }`}
+                    style={{ width: 'calc(50% - 40px)' }}
+                  >
+                    <div
+                      onMouseEnter={() => setHoveredId(event.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      className={`cursor-pointer transition-all duration-300 ${isHovered ? 'scale-105' : ''}`}
+                    >
+                      <div className="font-mono text-[10px] mb-0.5" style={{ color: theme.colors.textMuted }}>
+                        {event.date}
+                      </div>
+                      <h4 className="text-sm font-semibold leading-tight" style={{ color: theme.colors.textPrimary }}>
+                        {event.name[lang]}
+                      </h4>
+                      <div className="text-[10px] mt-0.5" style={{ color: theme.colors.textSecondary }}>
+                        {event.tag[lang]}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-        {/* Spacer for right padding */}
-        <div className="w-12 flex-shrink-0"></div>
+        </div>
+
+        {/* Scroll indicators */}
+        {!isAtTop && (
+          <div
+            className="absolute top-8 left-0 right-0 h-12 pointer-events-none z-20"
+            style={{ background: `linear-gradient(to bottom, ${theme.colors.bgAlt}, transparent)` }}
+          />
+        )}
+        {!isAtBottom && (
+          <div
+            className="absolute bottom-8 left-0 right-0 h-12 pointer-events-none z-20"
+            style={{ background: `linear-gradient(to top, ${theme.colors.bgAlt}, transparent)` }}
+          />
+        )}
+      </div>
+
+      {/* Right: Event details with frosted glass */}
+      <div className="hidden lg:flex w-[55%] items-center justify-center p-12 relative">
+        {displayEvent && (
+          <div
+            className="max-w-lg p-6 rounded-lg"
+            style={{
+              backgroundColor: theme.colors.cardBg,
+              border: theme.colors.cardBorder === 'none' ? 'none' : theme.colors.cardBorder,
+              backdropFilter: theme.colors.cardBackdropFilter,
+            }}
+          >
+            <div
+              className="w-full h-[260px] mb-6 bg-cover bg-center rounded-lg overflow-hidden"
+              style={{
+                backgroundImage: displayEvent.image
+                  ? `url(${displayEvent.image})`
+                  : `linear-gradient(135deg, ${theme.colors.textMuted} 0%, ${theme.colors.accent} 100%)`
+              }}
+            />
+
+            <div className="flex items-center gap-4 mb-4">
+              <span
+                className="px-3 py-1 text-xs font-mono rounded"
+                style={{
+                  backgroundColor: displayEvent.status[lang] === '报名中' || displayEvent.status[lang] === 'Open'
+                    ? theme.colors.accent
+                    : theme.colors.border,
+                  color: displayEvent.status[lang] === '报名中' || displayEvent.status[lang] === 'Open'
+                    ? '#FFFFFF'
+                    : theme.colors.textSecondary
+                }}
+              >
+                {displayEvent.status[lang]}
+              </span>
+              <span className="font-mono text-sm" style={{ color: theme.colors.textSecondary }}>
+                {displayEvent.date}
+              </span>
+            </div>
+
+            <h2 className="text-3xl font-bold mb-4" style={{ color: theme.colors.textPrimary }}>
+              {displayEvent.name[lang]}
+            </h2>
+
+            <p className="mb-4" style={{ color: theme.colors.textSecondary }}>
+              {displayEvent.shortIntro[lang]}
+            </p>
+
+            <p className="text-sm leading-relaxed" style={{ color: theme.colors.textMuted }}>
+              {displayEvent.detailedIntro[lang]}
+            </p>
+          </div>
+        )}
+
+        <button
+          className="absolute bottom-8 right-8 font-mono text-xs transition-colors"
+          style={{ color: theme.colors.textSecondary }}
+          onMouseEnter={(e) => e.currentTarget.style.color = theme.colors.accent}
+          onMouseLeave={(e) => e.currentTarget.style.color = theme.colors.textSecondary}
+        >
+          {lang === 'cn' ? '查看全部活动' : 'VIEW ALL EVENTS'} {'->'}
+        </button>
       </div>
     </section>
   );

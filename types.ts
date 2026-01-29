@@ -16,6 +16,7 @@ export interface Blog extends BaseEntity {
   location: string;
   coordinates: [number, number]; // Longitude, Latitude
   summary: LocalizedString;
+  excerpt: LocalizedString; // Full paragraph summary
 }
 
 export interface Event extends BaseEntity {
@@ -26,6 +27,9 @@ export interface Event extends BaseEntity {
   tag: LocalizedString;
   date: string;
   link: string;
+  image?: string;
+  shortIntro: LocalizedString;
+  detailedIntro: LocalizedString;
 }
 
 export interface Job extends BaseEntity {
@@ -36,11 +40,20 @@ export interface Job extends BaseEntity {
   link: string;
 }
 
+export interface Career extends BaseEntity {
+  type: 'career';
+  title: LocalizedString;
+  stats: { label: LocalizedString; value: string }[];
+  description: LocalizedString;
+}
+
 export interface Sponsor extends BaseEntity {
   type: 'sponsor';
   brandName: LocalizedString;
-  tier: 'Platinum' | 'Gold';
+  tier: 'Platinum' | 'Gold' | 'Silver';
   industry: LocalizedString;
+  logo?: string;
+  url?: string;
 }
 
 export interface Resource extends BaseEntity {
@@ -52,7 +65,7 @@ export interface Resource extends BaseEntity {
 }
 
 // Union type for all data
-export type AppData = Blog | Event | Job | Sponsor | Resource;
+export type AppData = Blog | Event | Job | Sponsor | Resource | Career;
 
 export interface DataCard {
   id: string;
